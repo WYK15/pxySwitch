@@ -1,0 +1,7 @@
+Package: com.oel.pxyswi
+Name: pxyswi
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: manager proxy
+Maintainer: wangyankun
+Author: wangyankun

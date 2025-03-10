@@ -1,0 +1,9 @@
+Package: com.oel.pxy4sp
+Name: pxy4sp
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: An awesome tool of some sort!!
+Maintainer: wangyankun
+Author: wangyankun
+Section: System
+Tag: role::hacker
