@@ -4,7 +4,7 @@
 
 ## 编译
 项目编译需要私有库，WiFiKit, 在 $THEOS/sdks 目录下存在
-需要修改 Makefile 为 iphone:$THSOS/sdks/iPhoneOSVer:TARGET_OS_VER，如
+需要修改 Makefile 为 iphone:$THSOS/sdks/iPhoneOS_Ver:TARGET_OS_VER，如
 iphone:16.5:13.0
 
 ```
