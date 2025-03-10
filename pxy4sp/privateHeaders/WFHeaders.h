@@ -1,3 +1,5 @@
+#import <Foundation/Foundation.h>
+
 @interface WFNetworkScanRecord : NSObject
 @property (nonatomic,copy) NSString * ssid;  
 @end

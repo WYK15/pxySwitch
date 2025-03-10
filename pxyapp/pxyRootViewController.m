@@ -117,12 +117,16 @@
         NSLog(@"未选择代理服务");
     }
 
+    [self showAlertWithMessage:@"设置代理成功"];
+
 }
 
 - (void)disconnectButtonTapped:(UIButton *)sender {
     // 处理清除代理按钮点击
     NSLog(@"leotag 清除代理");
     resetProxy(nil, nil, nil, nil);
+
+    [self showAlertWithMessage:@"清除代理成功"];
 }
 
 // 添加搜索按钮事件处理
@@ -131,7 +135,7 @@
     
     NSInteger port = [self.portTextField.text integerValue];
     if (port <= 0) {
-        NSLog(@"请输入有效的端口号");
+        [self showAlertWithMessage:@"请输入有效的端口号"];
         return;
     }
     
@@ -147,6 +151,15 @@
             }
         });
     }];
+}
+
+- (void)showAlertWithMessage:(NSString *)message {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"提示"
+                                                                             message:message
+                                                                      preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil];
+    [alertController addAction:okAction];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 // 实现UITextFieldDelegate方法处理键盘

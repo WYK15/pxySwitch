@@ -1,5 +1,4 @@
-# TARGET := iphone:clang:latest:13.0
-TARGET = iphone:13.7:13.0
+
 INSTALL_TARGET_PROCESSES = pxyapp
 
 include $(THEOS)/makefiles/common.mk
