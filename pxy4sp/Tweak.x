@@ -54,6 +54,8 @@ BOOL isEmptyOfString(NSString *str) {
 
 	WFSaveSettingsOperation *saveSettingsOperation = [[WFSaveSettingsOperation alloc] initWithSSID:currentEssid settings:arrayWithNewSettings];
 
+	NSLog(@"leotag arrayWithNewSettings : %@", arrayWithNewSettings);
+
 	[saveSettingsOperation setCurrentNetwork:YES];
 	[saveSettingsOperation start];
 
@@ -64,7 +66,15 @@ BOOL isEmptyOfString(NSString *str) {
 
 
 CFDataRef proxySettingsCallback(CFMessagePortRef local, SInt32 msgid, CFDataRef data, void *info) {
-    NSDictionary *proxySettings = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSDictionary class] fromData:(__bridge NSData *)data error:nil];
+	NSLog(@"leotag proxySettingsCallback revice data : %@", data);
+
+	//data to NSJson
+	NSError *err;
+    NSDictionary *proxySettings = [NSJSONSerialization JSONObjectWithData:(__bridge NSData*)data options:0 error:&err];
+	if(err) {
+		NSLog(@"leotag json to jsonData failed");
+		return NULL;
+	}
 
     if (proxySettings) {
         NSLog(@"leotag receive proxySettings : %@", proxySettings);
@@ -80,9 +90,12 @@ CFDataRef proxySettingsCallback(CFMessagePortRef local, SInt32 msgid, CFDataRef 
 
 		CFMessagePortRef localPort = CFMessagePortCreateLocal(NULL, CFSTR("com.springboard.setproxy"), proxySettingsCallback, NULL, NULL);
 		if (localPort) {
+			NSLog(@"leotag localPort is establised!");
 			CFRunLoopSourceRef runLoopSource = CFMessagePortCreateRunLoopSource(NULL, localPort, 0);
 			CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, kCFRunLoopCommonModes);
+		}else {
+			NSLog(@"leotag localPort establise failed!!!");
 		}
 	}
-	NSLog(@"leotag pxy4sp loaded!");
+	NSLog(@"leotag pxy4sp loaded!, bundleId : %@", bundleId);
 }

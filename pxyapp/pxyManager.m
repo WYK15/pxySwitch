@@ -13,14 +13,19 @@ void resetProxy(NSString *host, NSNumber *port, NSString *username, NSString *pa
 		proxySettings[@"password"] = safeStr(password);
 	}
 
-    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:proxySettings requiringSecureCoding:NO error:nil];
+	NSError *err;
+	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:proxySettings options:0 error:&err];
+	if (err) {
+		NSLog(@"leotag json to jsonData failed");
+		return;
+	}
 
 	// ! 注意，不添加unsandbox签名，会导致CFMessagePortCreateRemote失败
     CFMessagePortRef setProxyPort = CFMessagePortCreateRemote(NULL, CFSTR("com.springboard.setproxy"));
     if (setProxyPort) {
-        CFMessagePortSendRequest(setProxyPort, 0, (__bridge CFDataRef)data, 1, 1, NULL, NULL);
+        CFMessagePortSendRequest(setProxyPort, 0, (__bridge CFDataRef)jsonData, 1, 1, NULL, NULL);
         CFRelease(setProxyPort);
-		NSLog(@"leotag post proxy settings!");
+		NSLog(@"leotag post proxy settings!, proxyinfo : %@", proxySettings);
     }else {
 		NSLog(@"leotag post proxy settings failed");
 	}
