@@ -12,6 +12,7 @@
 @property (nonatomic, strong) UIButton *searchButton;
 @property (nonatomic, assign) NSInteger selectedIndex;
 @property (nonatomic, strong) NSArray<NSString *> *proxyServices;
+@property (nonatomic, strong) NSMutableDictionary *proxyAuthSettings;
 @end
 
 @implementation pxyRootViewController
@@ -19,8 +20,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.proxyServices = @[]; // 确保初始化为空数组
-    self.selectedIndex = -1;  // 初始化选中索引为-1
+    self.proxyServices = @[];
+    self.selectedIndex = -1;
+    self.proxyAuthSettings = [NSMutableDictionary dictionary];
     self.title = @"代理助手";
     
     // 创建并设置tableView
@@ -54,7 +56,7 @@
     [self.disconnectButton addTarget:self action:@selector(disconnectButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
     self.portTextField = [[UITextField alloc] init];
-    self.portTextField.placeholder = @"输入端口号";
+    self.portTextField.placeholder = @"末端口号";
     self.portTextField.borderStyle = UITextBorderStyleRoundedRect;
     self.portTextField.keyboardType = UIKeyboardTypeNumberPad;
     self.portTextField.text = @"8888";
@@ -108,17 +110,22 @@
     if (self.selectedIndex >= 0 && self.selectedIndex < self.proxyServices.count) {
         NSString *selectedService = self.proxyServices[self.selectedIndex];
         NSLog(@"leotag. 选中的代理服务: %@", selectedService);
-        // 在这里处理选中的代理服务
 
         NSString *ip = [selectedService componentsSeparatedByString:@":"].firstObject;
         NSInteger port = [selectedService componentsSeparatedByString:@":"].lastObject.integerValue;
-        resetProxy(ip, @(port), nil, nil);
+        
+        // 获取认证设置
+        NSDictionary *authSettings = self.proxyAuthSettings[selectedService];
+        if (authSettings && [authSettings[@"enabled"] boolValue]) {
+            resetProxy(ip, @(port), authSettings[@"username"], authSettings[@"password"]);
+        } else {
+            resetProxy(ip, @(port), nil, nil);
+        }
     } else {
         NSLog(@"未选择代理服务");
     }
 
     [self showAlertWithMessage:@"设置代理成功"];
-
 }
 
 - (void)disconnectButtonTapped:(UIButton *)sender {
@@ -183,6 +190,9 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     if (!cell) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+        // 添加长按手势识别器
+        UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+        [cell addGestureRecognizer:longPress];
     }
     
     if (indexPath.row < self.proxyServices.count) {
@@ -192,6 +202,85 @@
     }
     
     return cell;
+}
+
+- (void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer {
+    if (gestureRecognizer.state == UIGestureRecognizerStateBegan) {
+        UITableViewCell *cell = (UITableViewCell *)gestureRecognizer.view;
+        NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+        if (indexPath) {
+            [self showAuthSettingsForService:self.proxyServices[indexPath.row]];
+        }
+    }
+}
+
+- (void)showAuthSettingsForService:(NSString *)service {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"代理认证设置"
+                                                                          message:service
+                                                                   preferredStyle:UIAlertControllerStyleAlert];
+    
+    NSDictionary *settings = self.proxyAuthSettings[service];
+    BOOL isAuthEnabled = [settings[@"enabled"] boolValue];
+    
+    [alertController addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+    
+    // 添加认证开关
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+        textField.placeholder = @"需要认证";
+        textField.text = isAuthEnabled ? @"是" : @"否";
+        textField.enabled = NO;
+    }];
+    
+    // 添加用户名输入框
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+        textField.placeholder = @"用户名";
+        textField.text = settings[@"username"];
+        textField.enabled = isAuthEnabled;
+    }];
+    
+    // 添加密码输入框
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+        textField.placeholder = @"密码";
+        textField.text = settings[@"password"];
+        textField.secureTextEntry = YES;
+        textField.enabled = isAuthEnabled;
+    }];
+    
+    // 添加开关按钮
+    [alertController addAction:[UIAlertAction actionWithTitle:isAuthEnabled ? @"关闭认证" : @"开启认证" 
+                                                      style:UIAlertActionStyleDefault 
+                                                    handler:^(UIAlertAction *action) {
+        [self toggleAuthSettings:!isAuthEnabled forService:service];
+    }]];
+    
+    // 添加保存按钮
+    [alertController addAction:[UIAlertAction actionWithTitle:@"保存" 
+                                                      style:UIAlertActionStyleDefault 
+                                                    handler:^(UIAlertAction *action) {
+        if (isAuthEnabled) {
+            NSString *username = alertController.textFields[1].text;
+            NSString *password = alertController.textFields[2].text;
+            [self saveAuthSettings:@{@"enabled": @YES,
+                                   @"username": username,
+                                   @"password": password} 
+                       forService:service];
+        }
+    }]];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void)toggleAuthSettings:(BOOL)enabled forService:(NSString *)service {
+    if (enabled) {
+        self.proxyAuthSettings[service] = @{@"enabled": @YES, @"username": @"", @"password": @""};
+    } else {
+        self.proxyAuthSettings[service] = @{@"enabled": @NO};
+    }
+    [self showAuthSettingsForService:service];
+}
+
+- (void)saveAuthSettings:(NSDictionary *)settings forService:(NSString *)service {
+    self.proxyAuthSettings[service] = settings;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
