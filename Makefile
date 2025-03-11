@@ -13,8 +13,8 @@ include $(THEOS)/makefiles/common.mk
 SUBPROJECTS += pxyapp
 SUBPROJECTS += pxy4sp
 
-# make package THEOS_PACKAGE_SCHEME=rootless
-
+# make package THEOS_PACKAGE_SCHEME=rootless  
+# for release : FINALPACKAGE=1
 
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
