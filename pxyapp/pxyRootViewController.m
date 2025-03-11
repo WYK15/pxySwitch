@@ -23,7 +23,7 @@
     self.proxyServices = @[];
     self.selectedIndex = -1;
     self.proxyAuthSettings = [NSMutableDictionary dictionary];
-    self.title = @"代理助手";
+    self.title = @"Proxy Helper";
     
     // 创建并设置tableView
     self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
@@ -48,22 +48,22 @@
     
     // 创建按钮和输入框
     self.connectionButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [self.connectionButton setTitle:@"设置代理" forState:UIControlStateNormal];
+    [self.connectionButton setTitle:@"Set Proxy" forState:UIControlStateNormal];
     [self.connectionButton addTarget:self action:@selector(connectionButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
     self.disconnectButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [self.disconnectButton setTitle:@"清除代理" forState:UIControlStateNormal];
+    [self.disconnectButton setTitle:@"Clear Proxy" forState:UIControlStateNormal];
     [self.disconnectButton addTarget:self action:@selector(disconnectButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
     self.portTextField = [[UITextField alloc] init];
-    self.portTextField.placeholder = @"末端口号";
+    self.portTextField.placeholder = @"Port Number";
     self.portTextField.borderStyle = UITextBorderStyleRoundedRect;
     self.portTextField.keyboardType = UIKeyboardTypeNumberPad;
     self.portTextField.text = @"8888";
     
     // 创建搜索按钮
     self.searchButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [self.searchButton setTitle:@"查找" forState:UIControlStateNormal];
+    [self.searchButton setTitle:@"Search" forState:UIControlStateNormal];
     [self.searchButton addTarget:self action:@selector(searchButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
     // 创建水平stackView放置输入框和搜索按钮
@@ -105,35 +105,42 @@
 
 - (void)connectionButtonTapped:(UIButton *)sender {
     // 处理设置代理按钮点击
-    NSLog(@"设置代理");
+    NSLog(@"Setting proxy");
 
     if (self.selectedIndex >= 0 && self.selectedIndex < self.proxyServices.count) {
         NSString *selectedService = self.proxyServices[self.selectedIndex];
-        NSLog(@"leotag. 选中的代理服务: %@", selectedService);
+        NSLog(@"leotag. Selected proxy service: %@", selectedService);
 
         NSString *ip = [selectedService componentsSeparatedByString:@":"].firstObject;
         NSInteger port = [selectedService componentsSeparatedByString:@":"].lastObject.integerValue;
         
         // 获取认证设置
         NSDictionary *authSettings = self.proxyAuthSettings[selectedService];
+        BOOL setProxyRes = NO;
         if (authSettings && [authSettings[@"enabled"] boolValue]) {
-            resetProxy(ip, @(port), authSettings[@"username"], authSettings[@"password"]);
+            setProxyRes = resetProxy(ip, @(port), authSettings[@"username"], authSettings[@"password"]);
         } else {
-            resetProxy(ip, @(port), nil, nil);
+            setProxyRes = resetProxy(ip, @(port), nil, nil);
+        }
+
+        if (setProxyRes) {
+            [self showAlertWithMessage:@"Proxy set successfully"];
+        }else {
+            [self showAlertWithMessage:@"Proxy set failed"];
         }
     } else {
-        NSLog(@"未选择代理服务");
+        NSLog(@"No proxy service selected");
     }
-
-    [self showAlertWithMessage:@"设置代理成功"];
 }
 
 - (void)disconnectButtonTapped:(UIButton *)sender {
     // 处理清除代理按钮点击
-    NSLog(@"leotag 清除代理");
-    resetProxy(nil, nil, nil, nil);
-
-    [self showAlertWithMessage:@"清除代理成功"];
+    NSLog(@"leotag Clearing proxy");
+    if (resetProxy(nil, nil, nil, nil)) {
+        [self showAlertWithMessage:@"Proxy cleared successfully"];
+    }else {
+        [self showAlertWithMessage:@"Proxy cleared failed"];
+    }
 }
 
 // 添加搜索按钮事件处理
@@ -142,7 +149,7 @@
     
     NSInteger port = [self.portTextField.text integerValue];
     if (port <= 0) {
-        [self showAlertWithMessage:@"请输入有效的端口号"];
+        [self showAlertWithMessage:@"Please enter a valid port number"];
         return;
     }
     
@@ -154,17 +161,17 @@
             [self.tableView reloadData];
             
             if (services.count == 0) {
-                NSLog(@"未找到可用的代理服务");
+                NSLog(@"No available proxy services found");
             }
         });
     }];
 }
 
 - (void)showAlertWithMessage:(NSString *)message {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"提示"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Notice"
                                                                              message:message
                                                                       preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil];
+    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
     [alertController addAction:okAction];
     [self presentViewController:alertController animated:YES completion:nil];
 }
@@ -215,46 +222,46 @@
 }
 
 - (void)showAuthSettingsForService:(NSString *)service {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"代理认证设置"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Proxy Authentication Settings"
                                                                           message:service
                                                                    preferredStyle:UIAlertControllerStyleAlert];
     
     NSDictionary *settings = self.proxyAuthSettings[service];
     BOOL isAuthEnabled = [settings[@"enabled"] boolValue];
     
-    [alertController addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     
     // 添加认证开关
     [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-        textField.placeholder = @"需要认证";
-        textField.text = isAuthEnabled ? @"是" : @"否";
+        textField.placeholder = @"Requires authentication";
+        textField.text = isAuthEnabled ? @"Yes" : @"No";
         textField.enabled = NO;
     }];
     
     // 添加用户名输入框
     [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-        textField.placeholder = @"用户名";
+        textField.placeholder = @"Username";
         textField.text = settings[@"username"];
         textField.enabled = isAuthEnabled;
     }];
     
     // 添加密码输入框
     [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-        textField.placeholder = @"密码";
+        textField.placeholder = @"Password";
         textField.text = settings[@"password"];
         textField.secureTextEntry = YES;
         textField.enabled = isAuthEnabled;
     }];
     
     // 添加开关按钮
-    [alertController addAction:[UIAlertAction actionWithTitle:isAuthEnabled ? @"关闭认证" : @"开启认证" 
+    [alertController addAction:[UIAlertAction actionWithTitle:isAuthEnabled ? @"Disable authentication" : @"Enable authentication" 
                                                       style:UIAlertActionStyleDefault 
                                                     handler:^(UIAlertAction *action) {
         [self toggleAuthSettings:!isAuthEnabled forService:service];
     }]];
     
     // 添加保存按钮
-    [alertController addAction:[UIAlertAction actionWithTitle:@"保存" 
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Save" 
                                                       style:UIAlertActionStyleDefault 
                                                     handler:^(UIAlertAction *action) {
         if (isAuthEnabled) {

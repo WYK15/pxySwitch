@@ -1,6 +1,6 @@
 #import "pxyUtil.h"
 
-void resetProxy(NSString *host, NSNumber *port, NSString *username, NSString *password) {
+BOOL resetProxy(NSString *host, NSNumber *port, NSString *username, NSString *password) {
     NSMutableDictionary *proxySettings = [[NSMutableDictionary alloc] init];
 	proxySettings[@"host"] = safeStr(host);
 	if (port != nil) {
@@ -17,7 +17,7 @@ void resetProxy(NSString *host, NSNumber *port, NSString *username, NSString *pa
 	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:proxySettings options:0 error:&err];
 	if (err) {
 		NSLog(@"leotag json to jsonData failed");
-		return;
+		return NO;
 	}
 
 	// ! 注意，不添加unsandbox签名，会导致CFMessagePortCreateRemote失败
@@ -29,8 +29,9 @@ void resetProxy(NSString *host, NSNumber *port, NSString *username, NSString *pa
     }else {
 		NSLog(@"leotag post proxy settings failed");
 	}
+	return setProxyPort != nil;
 }
 
-void clearProxy() {
-	resetProxy(nil, nil, nil, nil);
+BOOL clearProxy() {
+	return resetProxy(nil, nil, nil, nil);
 }
