@@ -1,11 +1,4 @@
-export TARGET = iphone:16.5:13.0
-
-ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
-	export ARCHS = arm64 arm64e
-else
-	export ARCHS = arm64
-endif
-
+export TARGET = iphone:16.5:14.0
 
 include $(THEOS)/makefiles/common.mk
 
@@ -27,5 +20,5 @@ package::
 	find . -name ".DS_Store" -delete
 
 
-# after-install::
-# 	install.exec "killall backboardd"
+after-install::
+	install.exec "sbreload"
