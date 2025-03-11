@@ -7,7 +7,7 @@
 2. 选择查找到的可以连接的ip
 3. 若需要认证，则长按开启认证
 4. 点击"设置代理"，即可设置代理，经过测试，有时可能需要点击两次生效
-5. 点击"清楚代理"，即可取消代理
+5. 点击"清除代理"，即可取消代理
 
 ## 编译
 项目编译需要私有库，WiFiKit, 在 $THEOS/sdks 目录下存在
@@ -16,12 +16,12 @@ iphone:16.5:13.0
 
 ```
 make
-make package 
+make package FINALPACKAGE=1
 ```
 
 若要编译rootless版本：
 ```
-make package THEOS_PACKAGE_SCHEME=rootless
+make package THEOS_PACKAGE_SCHEME=rootless FINALPACKAGE=1
 ```
 
 ## 借鉴
