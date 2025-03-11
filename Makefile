@@ -24,6 +24,7 @@ stage::
 
 
 package::
+	find . -name ".DS_Store" -delete
 
 
 # after-install::
