@@ -1,6 +1,7 @@
 #import "pxyRootViewController.h"
 #import "pxyProxyServiceScanner.h"
 #import "pxyManager.h"
+#import "pxyNetworkDetailViewController.h"
 
 
 @interface pxyRootViewController () <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate>
@@ -24,6 +25,13 @@
     self.selectedIndex = -1;
     self.proxyAuthSettings = [NSMutableDictionary dictionary];
     self.title = @"Proxy Helper";
+    
+    // 添加导航栏右侧Detail按钮
+    UIBarButtonItem *detailButton = [[UIBarButtonItem alloc] initWithTitle:@"ipInfo" 
+                                                                     style:UIBarButtonItemStylePlain 
+                                                                    target:self 
+                                                                    action:@selector(detailButtonTapped:)];
+    self.navigationItem.rightBarButtonItem = detailButton;
     
     // 创建并设置tableView
     self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
@@ -300,4 +308,9 @@
     [tableView reloadData];
 }
 
+// 添加Detail按钮点击事件处理
+- (void)detailButtonTapped:(UIBarButtonItem *)sender {
+    pxyNetworkDetailViewController *detailVC = [[pxyNetworkDetailViewController alloc] init];
+    [self.navigationController pushViewController:detailVC animated:YES];
+}
 @end

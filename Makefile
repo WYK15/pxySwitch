@@ -21,4 +21,4 @@ package::
 
 
 after-install::
-	install.exec "sbreload"
+#	install.exec "sbreload"
